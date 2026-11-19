@@ -1,0 +1,28 @@
+id = "gmut"
+name = "Gravitational Modulating Additional Unit"
+version = "0.2.0"
+description = """A port of Gravitational Modulating Additional Unit for Horizon: the MekaSuit module
+that adds a vertical-speed step to the Gravitational Modulating Unit. It carries the unit item, its
+five steps (off, low, medium, high and ultra), the per-stack step it keeps in its own
+gmut:vertical_speed component, the right-click and /gmut toggles, and the readout of its placement
+and the suit gate. What the module does to a player who wears it — defy gravity, stop immediately,
+fix the field of view, mute the modulating sound and multiply the vertical speed — needs an
+attribute write and a MekaSuit, and neither exists at this pin, so the port reports the gate
+instead of pretending to apply it."""
+authors = ["gisellevonbingen", "AdLf0208"]
+# A native mod: Rust in src/, compiled by the launcher against the game build [native] pins,
+# beside data/ and assets/. The id is the resource namespace and the only identity: Cargo's
+# package name and version are not the mod's.
+api = "0.2"
+# "both" is the installation side, not the hook's: the item, its component type and its commands
+# are server behaviour, its tooltip is the client's, and an integrated server belongs to the
+# client installation.
+side = "both"
+# The one shared value every manifest carries ("May add blocks, items, mob effects and entity
+# types"); this mod registers an item, its creative tab, and one NBT component type.
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "0b14f8acfd97fa2c750e42795249dcc981178ca4"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
