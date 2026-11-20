@@ -1,10 +1,10 @@
 # VALIDATION — `gmut`
 
-**Current evidence is the SDK package table in [`notes.md`](notes.md) §“The component write that
-did not stick (2026-11-20) → Verification after the fix”** (nightly `0b14f8a`, `cargo test` 16/16,
-`cargo horizon-mod build`/`check`/`fits` green, `gmut.hmod` 22,432 B `a23a1cab…e0e5`, the in-game
-leg `PASS` + `EXIT:0` with its control at `EXIT:1`). Everything below this line
-is the **retired `.hnmod` ladder** at pin `1d63e0a`/mixins `5a64af9`, kept as the record of what
+**Current evidence is [`notes.md`](notes.md) §“Validation at `0.2.1` (2026-11-21)”** (nightly
+`0b14f8a`, `cargo test` 16/16, `cargo horizon-mod build`/`check`/`fits` green, `gmut.hmod`
+**22,177 B** `c3f91a06…a0a3d76`, 15 entries, the in-game leg `PASS` + `EXIT:0` with its control and
+selftest at `EXIT:1`, and the coverage table for every family the jar ships). Everything below this
+line is the **retired `.hnmod` ladder** at pin `1d63e0a`/mixins `5a64af9`, kept as the record of what
 PR #580 proved; it cannot be re-run (its tooling was deleted with the format) and it is not
 evidence for the flat package.
 

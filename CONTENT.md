@@ -10,6 +10,16 @@ byte-for-byte; `--check` lists them without writing.
 the script still writes into `content/`, so run it into a scratch directory and compare. The
 content-only `horizon-mod.toml` it wrote is replaced by the root manifest.
 
+**What the content is not.** The jar's recipe and its advancement are **not carried** in 0.2.1: every
+ingredient is a Mekanism item or tag that does not exist at this pin, so the recipe can never match
+and the game rejected it at load (`recipes: invalid ingredient (unresolved tag or malformed input):
+{"tag":"mekanism:alloys/reinforced"}`). They are left out until Mekanism lands, and
+[`tools/carry_content.py`](tools/carry_content.py) regenerates them from the kept jar then. The item
+is reachable by `give` / the creative tab only. The lang file keeps the jar's Mekanism module-GUI
+keys for later slices; this port implements no suit GUI. The item's `gmut:vertical_speed` component
+stores a step and nothing more — the port does not change the player's velocity (see
+[`README.md`](README.md) and `notes.md` §“What the item does”).
+
 ## Carried verbatim from the jar
 
 | File | Why |
@@ -17,8 +27,6 @@ content-only `horizon-mod.toml` it wrote is replaced by the root manifest.
 | `assets/gmut/models/item/module_gravitational_modulating_additional_unit.json` | the item's model (`minecraft:item/generated`, one layer) |
 | `assets/gmut/textures/item/module_gravitational_modulating_additional_unit.png` | its texture |
 | `assets/gmut/lang/en_us.json` | the jar's names (module labels, key description, item group) — useful for the reading and for later slices |
-| `data/gmut/recipe/module_gravitational_modulating_additional_unit.json` | the shaped recipe, unchanged |
-| `data/gmut/advancement/recipes/misc/module_gravitational_modulating_additional_unit.json` | its recipe advancement, unchanged |
 
 ## Written for 26.3 / Horizon (not in the jar)
 
@@ -49,11 +57,15 @@ untouched):
    `zh_cn`): carried names exist only in English here; adding translations of
    keys this port does not use would be noise. They can be dropped in later
    without a code change.
-3. **The recipe's ingredients are Mekanism's and the `c:` convention:**
-   `mekanism:module_base`, `mekanism:alloys/reinforced`, `c:circuits/ultimate`,
-   `c:pellets/polonium`. Mekanism is unported and the pin ships no `c:` tags, so
-   the carried recipe loads and can never match. It is kept as the faithful
-   record of the jar; `notes.md` gap 1 carries the consequence.
+3. **The recipe and its advancement** (removed in 0.2.1): the recipe's ingredients are
+   Mekanism's and the `c:` convention — `mekanism:module_base`, `mekanism:alloys/reinforced`,
+   `c:circuits/ultimate`, `c:pellets/polonium`. Mekanism is unported and the pin ships no `c:` tags,
+   so the recipe can never match, and the game rejected it at load:
+   `recipes: invalid ingredient (unresolved tag or malformed input):
+   {"tag":"mekanism:alloys/reinforced"}` (nine such lines per load in
+   `evidence/gmut-e2e/e2e-launcher.log`). Shipping dead data that logs errors is worse than not
+   shipping it, so both files are left out until Mekanism lands; `tools/carry_content.py` still
+   regenerates them from the jar. The item is give/creative only.
 4. **The recipe advancement's criterion** names
-   `mekanism:module_gravitational_modulating_unit`; like the recipe it is inert
-   until Mekanism exists. Nothing reads advancements in-game here.
+   `mekanism:module_gravitational_modulating_unit`; it was removed with the recipe for the same
+   reason. Nothing reads advancements in-game here.

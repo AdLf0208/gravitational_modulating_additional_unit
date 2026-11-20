@@ -1,14 +1,15 @@
 id = "gmut"
 name = "Gravitational Modulating Additional Unit"
-version = "0.2.0"
-description = """A port of Gravitational Modulating Additional Unit for Horizon: the MekaSuit module
-that adds a vertical-speed step to the Gravitational Modulating Unit. It carries the unit item, its
-five steps (off, low, medium, high and ultra), the per-stack step it keeps in its own
-gmut:vertical_speed component, the right-click and /gmut toggles, and the readout of its placement
-and the suit gate. What the module does to a player who wears it — defy gravity, stop immediately,
-fix the field of view, mute the modulating sound and multiply the vertical speed — needs an
-attribute write and a MekaSuit, and neither exists at this pin, so the port reports the gate
-instead of pretending to apply it."""
+version = "0.2.1"
+description = """A port of Gravitational Modulating Additional Unit for Horizon: the unit item and the
+vertical-speed setting it keeps. The item stores one of five steps (off, low, medium, high and ultra,
+1.0x to 3.0x) in its own per-stack gmut:vertical_speed component; a right click (back while sneaking)
+and /gmut mode|next|prev set and cycle it, and /gmut info reports the placement, the stored step and
+the MekaSuit gate. The stored step is a setting only: this port does not change the player's velocity,
+gravity, flight, field of view or sound, and flight is never granted. Those effects need a worn
+MekaSuit carrying a working gravitational modulating unit, and Mekanism is not ported at this pin, so
+the gate is always needs_gravitational_modulating_unit. The jar's recipe and its advancement are not
+carried: their Mekanism ingredients do not exist here, so the item is give/creative only."""
 authors = ["gisellevonbingen", "AdLf0208"]
 # A native mod: Rust in src/, compiled by the launcher against the game build [native] pins,
 # beside data/ and assets/. The id is the resource namespace and the only identity: Cargo's

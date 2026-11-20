@@ -9,16 +9,42 @@ publishing is approved (ARCHITECTURE.md §8). Pin **`0b14f8acfd97fa2c750e4279524
 `.hnmod`-era pin was `1d63e0a5` (`game.rs` `64813cf4…`, `native_hooks.rs` `10d293c3…`), mixins
 `5a64af93…` (schema 6); everything measured there is labelled historical below.
 
-Status: **ported-partial, migrated to the SDK format on 2026-11-18** — the item,
-its per-stack vertical-speed step, the right-click and `/gmut` toggles, the
-`/gmut info` readout and the tooltip are implemented, and their rules are green
-in `cargo test`. The effects the mod exists for (flight, gravity, FOV, sound)
-need a worn MekaSuit carrying a working gravitational modulating unit, so they
-stay **`blocked(no-mekasuit)`**: Mekanism (the MekaSuit parent) is unported. The
-abilities/attribute *writes* that used to block them exist at the SDK pin
-(`player_set_abilities`, `living_set_attribute_base`) — see gap 1.
+Status: **ported-partial, 0.2.1** — the item, its per-stack vertical-speed setting, the right-click
+and `/gmut` toggles, the `/gmut info` readout and the tooltip are implemented, and their rules are
+green in `cargo test`. **The setting is stored and cycled; it is not applied.** The port does not
+change the player's vertical velocity, gravity, flight, field of view or sound, and it never grants
+flight. The effects the mod exists for need a worn MekaSuit carrying a working gravitational
+modulating unit, so they stay **`blocked(no-mekasuit)`**: Mekanism (the MekaSuit parent) is
+unported. The abilities/attribute *writes* that used to block them exist at the SDK pin
+(`player_set_abilities`, `living_set_attribute_base`) — see gap 1 — but this port deliberately does
+not use them, because upstream applies them only through the suit.
 
-**Delivered as one flat `.hmod`.** `gmut 0.2.0` is `horizon-mod.toml` +
+## What the item does — authoritative text for the listing (0.2.1)
+
+The item `gmut:module_gravitational_modulating_additional_unit` is a single item on the paper
+template (max stack size 1, rarity rare). It stores one of five steps — `off` (1.0x), `low` (1.5x),
+`medium` (2.0x), `high` (2.5x), `ultra` (3.0x) — in its own per-stack `gmut:vertical_speed`
+component. A right click cycles the stored step forward, or back while sneaking; `/gmut mode <step>`
+sets it, `/gmut next` and `/gmut prev` cycle it with wrap, and each change prints upstream's line
+`Vertical Speed Modifier: <step> (<mult>x)`. `/gmut info` reports where the unit is (`held`,
+`off_hand`, `carried(N)` or `absent`), the stored step, four rule defaults and the gate. The tooltip
+shows the stored step and the gate line.
+
+**It does not change velocity.** The stored step is a label and a number only: no vertical-speed
+multiplier, no gravity change, no flight, no FOV fix and no sound change is applied, and flight is
+never granted. Those effects are gated upstream on a worn MekaSuit carrying a working gravitational
+modulating unit; Mekanism is not ported at this pin, so the gate is permanently
+`needs_gravitational_modulating_unit` and is reported honestly.
+
+**It carries no Mekanism recipe content.** The jar's shaped recipe and its advancement are **not**
+carried in 0.2.1: every ingredient (`mekanism:module_base`, `mekanism:alloys/reinforced`,
+`c:circuits/ultimate`, `c:pellets/polonium`) does not exist at this pin, the game rejected the
+recipe at load with `recipes: invalid ingredient (unresolved tag or malformed input)`, and dead data
+that logs errors is worse than no data. `tools/carry_content.py` regenerates both when Mekanism
+lands. The item is reachable by `give` and from its creative tab only. There is no suit installation,
+no module GUI, no HUD and no config page.
+
+**Delivered as one flat `.hmod`.** `gmut 0.2.1` is `horizon-mod.toml` +
 `Cargo.toml` + `src/` + `assets/gmut/` + `data/gmut/`, built by the launcher
 against the pinned game build: the item, its content and its behaviour are one
 package, which is what the registry's one-file-per-project rule needs. The
@@ -42,10 +68,12 @@ Brief: `ports/_shared/queue/brief-gmut.md`.
   callbacks (use, commands, tooltip), not a machine and not a deep entity/attribute
   job. The class's own rule ("after both sides are ported") is why the *effects*
   stay blocked instead of being emulated; the item half is what can be faithful.
-- **Carry-over vs agent port:** the model, texture, names, recipe and its
-  advancement are carried from the jar (`tools/carry_content.py`, decisions in
-  [`CONTENT.md`](CONTENT.md)); the mode component, its toggles, the readout and
-  the tooltip are the agent port.
+- **Carry-over vs agent port:** the model, texture and names are carried from the jar
+  (`tools/carry_content.py`, decisions in [`CONTENT.md`](CONTENT.md)); the mode
+  component, its toggles, the readout and the tooltip are the agent port. The jar's recipe and its
+  advancement are **not** carried in 0.2.1: their Mekanism ingredients do not exist at this pin, the
+  game rejected the recipe at load, and they are regenerated when Mekanism lands (CONTENT.md §“Left
+  out”).
 
 ## What the slice does
 
@@ -56,7 +84,8 @@ Brief: `ports/_shared/queue/brief-gmut.md`.
 - **The step.** Upstream's `VerticalSpeed` (`OFF 1.0`, `LOW 1.5`, `MEDIUM 2.0`,
   `HIGH 2.5`, `ULTRA 3.0`), kept **per stack** in the item's own
   `gmut:vertical_speed` component and cycled with `MathUtils.getByIndexMod`'s
-  wrap.
+  wrap. **Stored only:** no code reads it to change the player's movement at
+  this pin (see "What the item does" above).
 - **The toggles.** A right click (`native_use_item`, API 13) turns the step
   forward, or back while sneaking — upstream's keybind direction. `/gmut mode
   <off|low|medium|high|ultra>`, `/gmut next`, `/gmut prev` do the same from chat.
@@ -131,11 +160,12 @@ too, where the same helpers exist under the SDK's names.
 
 Generated by [`tools/carry_content.py`](tools/carry_content.py) from the kept
 jar; [`CONTENT.md`](CONTENT.md) lists every carried and every written file and
-why. 8 files: the item model and texture, the 26.3 item definition, the item
-declaration, a creative tab, the lang file, the recipe and its advancement — now
-`assets/gmut/` and `data/gmut/` at the port root, in the same `.hmod` as the code
-(the ninth file the old content package carried was its own `horizon-mod.toml`,
-which the root manifest replaces).
+why. 6 files: the item model and texture, the 26.3 item definition, the item
+declaration, a creative tab and the lang file — now `assets/gmut/` and
+`data/gmut/` at the port root, in the same `.hmod` as the code. The jar's recipe
+and advancement are not carried (0.2.1): their Mekanism ingredients do not exist
+at this pin and the game rejected the recipe at load, so shipping them only added
+invalid-ingredient errors; the carry script regenerates them when Mekanism lands.
 
 ## One file: the embedded content (slice 1b — **historical, retired 2026-11-18**)
 
@@ -306,7 +336,7 @@ expects, one transaction around the only write, and the pure rules left in `runt
 
 ## Verification
 
-### The SDK package (2026-11-18) — the current evidence
+### The SDK package (2026-11-18) — historical evidence for 0.2.0
 
 SDK nightly **`0b14f8acfd97fa2c750e42795249dcc981178ca4`**, mixins
 **`e59da9094f0c2fdda6c627fe9eff22dec6a906f0`**, launcher 0.2.78. Every step ran through
@@ -508,11 +538,13 @@ The 11 entries: `horizon-native.json`, `mixins/gmut/{embedded_content,runtime,su
 5. **The mode is the item's component, not a suit module config.** There is no
    suit and no module container; the component keeps upstream's per-stack
    semantics (proved in the e2e: two units hold different steps).
-6. **The recipe cannot be crafted.** `mekanism:module_base`,
+6. **The recipe is not carried (0.2.1).** `mekanism:module_base`,
    `mekanism:alloys/reinforced`, `c:circuits/ultimate` and
-   `c:pellets/polonium` do not exist at this pin, so the carried recipe loads
-   and never matches; its advancement is equally inert. The item is reachable by
-   `give`/creative only.
+   `c:pellets/polonium` do not exist at this pin; the recipe could never match
+   and the game rejected it at load (`recipes: invalid ingredient`), so the
+   recipe and its advancement were removed instead of shipping dead data. The
+   item is reachable by `give`/creative only; the carry script regenerates the
+   recipe when Mekanism lands.
 7. **The item cannot be installed in a suit** (upstream's `IMC` registration),
    and it is not a Mekanism `ModuleItem`; `Rarity.RARE` and stack size are the
    only item properties carried.
@@ -722,4 +754,107 @@ All steps through `ports/tools/build-slot.sh` with `BUILD_LOCAL=1` (the SDK path
 | fail-capability | `SELFTEST=1` | `e2e-launcher-selftest.log` | **FAIL** + `EXIT:1` (`the mode is 'low', expected 'high'`) |
 | logs gate | `python3 ports/tools/check-e2e-logs.py gmut-e2e --strict` | — | **4 ok, 0 missing-exit, 0 bad-exit** |
 
-Skills: superpowers/using-superpowers,systematic-debugging,test-driven-development,verification-before-completion; BeautifulRust/rust-best-practices
+## Review repairs — 0.2.1 (2026-11-21)
+
+The maintainer's 2026-11-20 22:33 review of `#1434` (at `559664fc`) raised three findings; this
+section is the record of each fix and the validation the PR body can link.
+
+### 1. The licence notice is complete
+
+`LICENSE` now carries the upstream copyright line **verbatim**, with `2022` restored:
+
+```
+Copyright (c) 2022 gisellevonbingen
+Copyright (c) 2026 AdLf0208 (this Horizon port)
+```
+
+The exact upstream line was read from the repository's `LICENSE` at its `1.21.1` branch (the branch
+whose `gradle.properties` says `mod_version=6.4`), not guessed. The template's stray
+`Horizon Veinminer contributors` line was removed: it was copied from another port and never
+described this one. `LICENSE-NOTICE.md` now names the package-root files that actually exist
+(`LICENSE`, `LICENSE-NOTICE.md`, `README.md`, `horizon-mod.toml`, `Cargo.toml`, `src/`, `assets/gmut/`,
+`data/gmut/`, `uses.json`) and records that the item texture is upstream's byte for byte, so the
+upstream MIT notice covers it.
+
+### 2. The listing text now matches the release
+
+The old text said the step "changes vertical velocity" and described Mekanism recipe content. Neither
+is true. The authoritative paragraph is §“What the item does — authoritative text for the listing
+(0.2.1)” above; `README.md`, `horizon-mod.toml`'s `description` and `CONTENT.md` were rewritten from
+it. In short: the item **stores and cycles** one of five steps; it does **not** change velocity,
+gravity, flight, FOV or sound; and **no Mekanism recipe content is carried** — the jar's recipe and
+advancement were removed in 0.2.1 because their ingredients do not exist at this pin and the game
+rejected them at load.
+
+### 3. The tagged validation is here
+
+§“Validation at 0.2.1” below is the section to link. There is no `RECEIPT.md` in the publishing
+repository, and this section is what replaces it.
+
+### Upstream-defect note: the carried recipe was dead data
+
+The jar's shaped recipe (`mekanism:module_base`, `mekanism:alloys/reinforced`,
+`c:circuits/ultimate`, `c:pellets/polonium`) can never match at this pin, and shipping it produced
+nine `recipes: invalid ingredient (unresolved tag or malformed input)` errors on every load
+(`evidence/gmut-e2e/e2e-launcher.log`, 2026-11-21 01:06 run). Per the campaign's “a carried recipe
+that is never crafted is dead data: test it, or drop it and say why”, both the recipe and its
+advancement were removed. The item is give/creative only, which the listing now says.
+`tools/carry_content.py` still regenerates both from the kept jar, so the slice that lands Mekanism
+re-adds them. The 0.2.1 leg logs **zero** invalid-ingredient errors.
+
+## Validation at `0.2.1` (2026-11-21)
+
+This is the tagged validation section: it names the version, the exact bytes and sha256, and every
+step of the ladder, so a pull-request body can link it instead of a missing receipt.
+
+**Artifact.** `gmut.hmod`, **22,177 B**, SHA-256
+**`c3f91a06d4df0c8b0935fff082b1846ab605d4bc6b7f940e3d505e2d6a0a3d76`**, **15 entries**, declared
+version **0.2.1**, `api = "0.2"`, `[native]` at Horizon
+`0b14f8acfd97fa2c750e42795249dcc981178ca4` + mixins
+`e59da9094f0c2fdda6c627fe9eff22dec6a906f0`, game 26.3. No packed `Cargo.lock` (removed before each
+build). Two consecutive builds with `rm -f Cargo.lock` before each were **byte-identical** (`cmp`
+clean, same sha256).
+
+| Step | Command (inside a `build-slot.sh` lease) | Evidence | Result |
+|---|---|---|---|
+| tests | `cargo test --offline --manifest-path ports/gmut/Cargo.toml` | `evidence/gmut/sdk-test.log` | **16 passed**, 0 failed, exit 0 |
+| clippy | `cargo clippy --all-targets --offline … -- -D warnings` | `sdk-clippy.log` | exit 0, **0 warnings** |
+| format | `rustfmt --edition 2024 --check src/*.rs` | `sdk-fmt.log` | exit 0 |
+| build 1 + 2 | `rm -f Cargo.lock && cargo horizon-mod build`, twice, `cmp` | `sdk-build.log`, `sdk-build-2.log` | **byte-identical**, `c3f91a06…a0a3d76` |
+| package | `unzip -l gmut.hmod` | — | **22,177 B**, **15 entries**, no `Cargo.lock` |
+| package check | `cargo horizon-mod check gmut.hmod` | `sdk-check.log` | exit 0: `gmut 0.2.1 (native-mod, format native-1/0b14f8ac…/e59da909…, for 26.3) … 22177 bytes … unsigned` |
+| fits, the pin | `cargo horizon-mod fits gmut.hmod --build 0b14f8a` | `sdk-fits.log` | exit 0: `0b14f8a  made for` |
+| fits, **a different build** | `cargo horizon-mod fits gmut.hmod --build 0a875da9` | `sdk-fits-other.log` | exit 0: `0a875da  fits` (SDK release 2026-11-20) |
+| gate | `python3 ports/tools/verify-sdk-package.py gmut` | `verify-sdk-package.log` | **1/1** |
+| licence in the archive | `unzip -p gmut.hmod LICENSE \| grep -n Copyright` | `LICENSE` in the archive | line 3 `Copyright (c) 2022 gisellevonbingen` |
+| retired paths | `grep -rn -E '\.hnmod\|mixins/' <unpacked archive>` | — | **NONE** |
+| in-game (modded) | `launcher-game.sh build gmut`, then the leg in a slot | `evidence/gmut-e2e/e2e-launcher.log` | **PASS** + `EXIT:0` |
+| in-game (control) | `GAME=$CONTROL_GAME`, same command | `e2e-launcher-control.log` | **FAIL** + `EXIT:1` (`the unit answered no info line at all`) |
+| fail-capability | `SELFTEST=1`, same command | `e2e-launcher-selftest.log` | **FAIL** + `EXIT:1` (`the mode is 'low', expected 'high'`) |
+| logs gate | `python3 ports/tools/check-e2e-logs.py gmut-e2e --strict` | — | **4 ok, 0 missing-exit, 0 bad-exit** |
+
+The leg (`e2e-launcher.log`) proves, with parsed `ctl` replies: A `absent`; B `held` with the OFF
+default; C five right clicks through `low, medium, high, ultra, off`, each changing the stack's own
+`gmut:vertical_speed` component and leaving **one** unit stack; D sneak+right click back to `ultra`;
+E `/gmut mode` on all five steps plus `next` wrapping `ultra→off` and `prev` wrapping `off→ultra`;
+F two units holding different steps across slot switches; G `carried(2)`; H an unknown `gmut:` id
+refused; I `off_hand`, then back to `carried(2)`; J `flying=false`, `fall_flying=false` with the step
+on `ultra`, and `modulation=needs_gravitational_modulating_unit` on every line.
+
+## Coverage — every family the jar ships
+
+| Family (from the jar) | Status | Evidence / reason |
+|---|---|---|
+| The unit item: id, model, texture, name, stack size 1, rarity rare, creative tab | **tested** | B: `ctl give` + `ctl inventory` reads the id back; `item.gmut.*` name in `assets/gmut/lang/en_us.json`; the tab carries the id |
+| The five-step setting, stored per stack in the item's component | **tested** | C: `stored component: gmut:vertical_speed=low/medium/high/ultra/off`; F: two units hold `ultra` and `low` independently |
+| Right-click cycle, forward and back while sneaking | **tested** | C (five steps forward), D (`off→ultra` while sneaking) |
+| `/gmut mode <step>`, `/gmut next`, `/gmut prev` | **tested** | E: all five via `mode`; `next` wraps `ultra→off`; `prev` wraps `off→ultra`; replies parsed |
+| `/gmut info`: placement, stored step, rule defaults, gate | **tested** | A/B/C/D/E/F/G/I/J parse the line; all four placements (`absent`, `held`, `carried(2)`, `off_hand`) appear |
+| Per-stack independence | **tested** | F: slot 1 `ultra`, slot 2 `low`, each re-read after switching |
+| Tooltip: stored step + “Requires a Gravitational Modulating Unit” | **blocked(ctl-hover)** | `horizon-ctl` has no item-hover command; the code path is compile-checked and the values it renders are asserted through `/gmut info` |
+| Flight, gravity, FOV fix, sound mute, the vertical-speed multiplier | **not ported** | J: `flying=false` with the step on `ultra`; the gate is always `needs_gravitational_modulating_unit`; `blocked(no-mekasuit)` (Mekanism unported) |
+| MekaSuit installation, module GUI, HUD, config page | **not ported** | no Mekanism and no module container at this pin; `blocked(no-mekasuit)` |
+| The jar's shaped recipe + its advancement | **blocked(no-mekanism)** | removed in 0.2.1: every ingredient is absent at this pin and the game rejected the recipe at load (`invalid ingredient`); `tools/carry_content.py` regenerates both |
+| The keybind (cycle on a key, sneak for backwards) | **not ported** | no client→server key action at this pin; the right click and `/gmut` carry the same direction rule |
+
+Skills: superpowers/using-superpowers,verification-before-completion,systematic-debugging; BeautifulRust/none (no Rust change)
